@@ -4,9 +4,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Scanner;
@@ -15,226 +14,187 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Tests LedgerFileProcessing
- * 
- * @author Zakariya Mohamed
+ *
+ * @author Jessica Young Schmidt
  */
 public class LedgerFileProcessingTest {
 
-  /**
-   * Tests readLedgerFromFile method with valid file
-   */
+  /** Resolve a test CSV that lives in src/test/resources/test-files/ */
+  private String res(String filename) {
+    URL url = getClass().getClassLoader()
+        .getResource("test-files/" + filename);
+    assertNotNull(url, "Test resource not found: " + filename);
+    return Path.of(url.getPath()).toString();
+  }
+
+  /** Return a path in target/test-output (created if necessary) */
+  private Path tempOut(String filename) {
+    try {
+      Path dir = Path.of("target", "test-output");
+      Files.createDirectories(dir);
+      return dir.resolve(filename);
+    } catch (IOException e) {
+      throw new RuntimeException(e); // fail fast if we cannot create it
+    }
+  }
+
+  /** Tests readLedgerFromFile with valid file */
   @Test
   public void testReadLedgerFromFile() {
+    Ledger ledger = LedgerFileProcessing.readLedgerFromFile(
+        res("Input-three-entries.csv"), 15);
 
-    Ledger ledger = LedgerFileProcessing
-        .readLedgerFromFile("test-files/Input-three-entries.csv", 15);
     assertEquals(3, ledger.getNumEntries());
     assertEquals(15, ledger.getSize());
     assertEquals(-20, ledger.getBalance());
     assertEquals(
-        "Date,Description,Amount,Balance\n" + "20230101,Gift,50,50\n"
-            + "20330303,Dinner out,-100,-50\n"
-            + "20330303,Dinner out - friend's portion,30,-20\n",
+        "Date,Description,Amount,Balance\n" +
+            "20230101,Gift,50,50\n" +
+            "20330303,Dinner out,-100,-50\n" +
+            "20330303,Dinner out - friend's portion,30,-20\n",
         ledger.toString());
   }
 
-  /**
-   * Tests readLedgerFromFile method with size that is too small
-   */
+  /** Tests readLedgerFromFile when size is too small */
   @Test
   public void testReadLedgerFromFileSizeTooSmall() {
-    Exception exception = assertThrows(IllegalArgumentException.class,
+    Exception ex = assertThrows(IllegalArgumentException.class,
         () -> LedgerFileProcessing.readLedgerFromFile(
-            "test-files/Input-three-entries.csv", 2),
-        "Ledger full");
-    assertEquals("Ledger is full", exception.getMessage(),
-        "Testing file input when size is too small exception message");
-
+            res("Input-three-entries.csv"), 2));
+    assertEquals("Ledger is full", ex.getMessage());
   }
 
-  /**
-   * Tests writeLedgerToFile with valid input
-   */
+  /** Tests writeLedgerToFile with valid input */
   @Test
-  public void testWriteLedgerToFile() {
-    Ledger a = new Ledger();
-    a.addEntry(3, 3, 2033, "Dinner out", -100);
-    a.addEntry(3, 3, 2033, "Dinner out - friend's portion", 30);
-    a.addEntry(1, 1, 2023, "Gift", 50);
+  public void testWriteLedgerToFile() throws IOException {
+    Ledger ledger = new Ledger();
+    ledger.addEntry(3, 3, 2033, "Dinner out", -100);
+    ledger.addEntry(3, 3, 2033, "Dinner out - friend's portion", 30);
+    ledger.addEntry(1, 1, 2023, "Gift", 50);
 
-    String filename = "test-files/Output-three-entries.csv";
-    Path path = Path.of(filename);
-    try {
-      Files.deleteIfExists(path);
-    } catch (IOException e) {
-      // Nothing needs to be done
-      e.printStackTrace();
-    }
+    Path out = tempOut("Output-three-entries.csv");
+    Files.deleteIfExists(out);
 
-    LedgerFileProcessing.writeLedgerToFile(filename, a);
+    LedgerFileProcessing.writeLedgerToFile(out.toString(), ledger);
 
-    String message = "Testing write to file";
+    String expected = "Date,Description,Amount,Balance\n" +
+        "20230101,Gift,50,50\n" +
+        "20330303,Dinner out,-100,-50\n" +
+        "20330303,Dinner out - friend's portion,30,-20\n";
 
-    String expectedContents = "Date,Description,Amount,Balance\n"
-        + "20230101,Gift,50,50\n" + "20330303,Dinner out,-100,-50\n"
-        + "20330303,Dinner out - friend's portion,30,-20\n";
-
-    try {
-      Scanner expected = new Scanner(expectedContents);
-      Scanner actual = new Scanner(new FileInputStream(filename));
-      testFileContents(expected, actual, message);
-      expected.close();
-      actual.close();
-    } catch (FileNotFoundException e) {
-      fail("File does not exist");
+    try (Scanner exp = new Scanner(expected);
+        Scanner act = new Scanner(new FileInputStream(out.toFile()))) {
+      compareScanners(exp, act, "writeLedgerToFile");
     }
   }
 
-  /**
-   * Testing contents of scanner
-   * 
-   * @param expected
-   *                 expected scanner
-   * @param actual
-   *                 actual scanner
-   * @param message
-   *                 message for test
-   */
-  public void testFileContents(Scanner expected, Scanner actual,
-      String message) {
+  /** Compare two scanners line-by-line */
+  private void compareScanners(Scanner expected, Scanner actual,
+      String context) {
     int line = 0;
     while (expected.hasNextLine()) {
       line++;
       if (actual.hasNextLine()) {
         assertEquals(expected.nextLine(), actual.nextLine(),
-            message + ": Testing line " + line);
+            context + " – line " + line);
       } else {
-        fail(message + ": Too few lines: line " + line);
+        fail(context + " – too few lines (at " + line + ')');
       }
     }
     if (actual.hasNextLine()) {
-      fail(message + ": Too many lines");
+      fail(context + " – too many lines");
     }
   }
 
-  /**
-   * Tests for Exceptions for writeLedgerToFile
-   */
+  /** Tests for exception cases in writeLedgerToFile */
   @Test
-  public void testForExceptionsWriteLedgerToFile() {
-    String filename = "test-files/Output-exceptions.csv";
-    Path path = Path.of(filename);
-    try {
-      Files.deleteIfExists(path);
-    } catch (IOException e) {
-      // Nothing needs to be done
-      e.printStackTrace();
-    }
-
-    Exception exception = assertThrows(IllegalArgumentException.class,
-        () -> LedgerFileProcessing.writeLedgerToFile(filename, null),
-        "null ledger when writing to file");
-    assertEquals("null ledger", exception.getMessage(),
-        "Testing exception message for null ledger when writing to file");
+  public void testExceptionsWriteLedgerToFile() throws IOException {
+    Path out = tempOut("Output-exceptions.csv");
+    Files.deleteIfExists(out);
 
     Ledger ledger = new Ledger();
     ledger.addEntry(3, 3, 2033, "Dinner out", -100);
     ledger.addEntry(3, 3, 2033, "Dinner out - friend's portion", 30);
     ledger.addEntry(1, 1, 2023, "Gift", 50);
 
-    exception = assertThrows(IllegalArgumentException.class,
-        () -> LedgerFileProcessing.writeLedgerToFile(null, ledger),
-        "null filepath when writing to file");
-    assertEquals("Invalid filepath", exception.getMessage(),
-        "Testing exception message for null filepath when writing to file");
+    assertEquals("null ledger",
+        assertThrows(IllegalArgumentException.class,
+            () -> LedgerFileProcessing.writeLedgerToFile(out.toString(), null))
+            .getMessage());
 
-    exception = assertThrows(IllegalArgumentException.class,
-        () -> LedgerFileProcessing.writeLedgerToFile(" \t ", ledger),
-        "whitespace filepath when writing to file");
-    assertEquals("Invalid filepath", exception.getMessage(),
-        "Testing exception message for whitespace filepath when writing to file");
+    assertEquals("Invalid filepath",
+        assertThrows(IllegalArgumentException.class,
+            () -> LedgerFileProcessing.writeLedgerToFile(null, ledger))
+            .getMessage());
 
-    path = Path.of(filename);
-    try {
-      Files.deleteIfExists(path);
-    } catch (IOException e) {
-      // Nothing needs to be done
-      e.printStackTrace();
-    }
+    assertEquals("Invalid filepath",
+        assertThrows(IllegalArgumentException.class,
+            () -> LedgerFileProcessing.writeLedgerToFile(" \t ", ledger))
+            .getMessage());
 
-    try {
-      PrintWriter out = new PrintWriter(new FileOutputStream(filename));
-      out.close();
-    } catch (FileNotFoundException e) {
-      e.printStackTrace();
-    }
+    // create an empty file so "already exists" path is triggered
+    Files.createFile(out);
 
-    exception = assertThrows(IllegalArgumentException.class,
-        () -> LedgerFileProcessing.writeLedgerToFile(filename, ledger),
-        "output file already exists");
-    assertEquals("Output file already exists.", exception.getMessage(),
-        "Testing exception message for output file already exists");
-
+    assertEquals("Output file already exists.",
+        assertThrows(IllegalArgumentException.class,
+            () -> LedgerFileProcessing.writeLedgerToFile(out.toString(), ledger))
+            .getMessage());
   }
 
-  /**
-   * Tests for Exceptions for readLedgerFromFile
-   */
+  /** Tests for exception cases in readLedgerFromFile */
   @Test
-  public void testForExceptionsReadLedgerFromFile() {
-    Exception exception = assertThrows(IllegalArgumentException.class,
-        () -> LedgerFileProcessing.readLedgerFromFile(null, 10),
-        "invalid filepath when reading from file");
-    assertEquals("Invalid filepath", exception.getMessage(),
-        "Testing exception message for invalid filepath when reading from file");
-    exception = assertThrows(IllegalArgumentException.class,
-        () -> LedgerFileProcessing.readLedgerFromFile("\t\t\t", 10),
-        "invalid filepath when reading from file");
-    assertEquals("Invalid filepath", exception.getMessage(),
-        "Testing exception message for invalid filepath when reading from file");
-    exception = assertThrows(IllegalArgumentException.class,
-        () -> LedgerFileProcessing.readLedgerFromFile(
-            "test-files/Input-three-entries.csv", 0),
-        "non-positive ledger size");
-    assertEquals("Invalid size", exception.getMessage(),
-        "Testing exception message for non-positive ledger size");
-    exception = assertThrows(IllegalArgumentException.class,
-        () -> LedgerFileProcessing
-            .readLedgerFromFile("test-files/not-here.csv", 10),
-        "file not found");
-    assertEquals("Input file not found.", exception.getMessage(),
-        "Testing exception message for file not found");
-    exception = assertThrows(IllegalArgumentException.class,
-        () -> LedgerFileProcessing
-            .readLedgerFromFile("test-files/empty.csv", 10),
-        "file is empty");
-    assertEquals("Input file is empty.", exception.getMessage(),
-        "Testing exception message for file that is empty");
-    exception = assertThrows(IllegalArgumentException.class,
-        () -> LedgerFileProcessing
-            .readLedgerFromFile("test-files/two-columns.csv", 10),
-        "too few columns in header");
-    assertEquals("Invalid file", exception.getMessage(),
-        "Testing exception message for too few columns in header");
-    exception = assertThrows(IllegalArgumentException.class,
-        () -> LedgerFileProcessing
-            .readLedgerFromFile("test-files/non-int-date.csv", 10),
-        "entry with non-int date");
-    assertEquals("Invalid file", exception.getMessage(),
-        "Testing exception message for entry with non-int date");
-    exception = assertThrows(IllegalArgumentException.class,
-        () -> LedgerFileProcessing.readLedgerFromFile(
-            "test-files/non-int-amount.csv", 10),
-        "entry with non-int amount");
-    assertEquals("Invalid file", exception.getMessage(),
-        "Testing exception message for entry with non-int amount");
-    exception = assertThrows(IllegalArgumentException.class,
-        () -> LedgerFileProcessing.readLedgerFromFile(
-            "test-files/missing-description.csv", 10),
-        "entry missing description");
-    assertEquals("Invalid file", exception.getMessage(),
-        "Testing exception message for entry missing description");
+  public void testExceptionsReadLedgerFromFile() {
+    assertEquals("Invalid filepath",
+        assertThrows(IllegalArgumentException.class,
+            () -> LedgerFileProcessing.readLedgerFromFile(null, 10))
+            .getMessage());
 
+    assertEquals("Invalid filepath",
+        assertThrows(IllegalArgumentException.class,
+            () -> LedgerFileProcessing.readLedgerFromFile("\t\t\t", 10))
+            .getMessage());
+
+    assertEquals("Invalid size",
+        assertThrows(IllegalArgumentException.class,
+            () -> LedgerFileProcessing.readLedgerFromFile(
+                res("Input-three-entries.csv"), 0))
+            .getMessage());
+
+    /* path that really does NOT exist */
+    assertEquals("Input file not found.",
+        assertThrows(IllegalArgumentException.class,
+            () -> LedgerFileProcessing.readLedgerFromFile(
+                tempOut("not-here.csv").toString(), 10))
+            .getMessage());
+
+    assertEquals("Input file is empty.",
+        assertThrows(IllegalArgumentException.class,
+            () -> LedgerFileProcessing.readLedgerFromFile(
+                res("empty.csv"), 10))
+            .getMessage());
+
+    assertEquals("Invalid file",
+        assertThrows(IllegalArgumentException.class,
+            () -> LedgerFileProcessing.readLedgerFromFile(
+                res("two-columns.csv"), 10))
+            .getMessage());
+
+    assertEquals("Invalid file",
+        assertThrows(IllegalArgumentException.class,
+            () -> LedgerFileProcessing.readLedgerFromFile(
+                res("non-int-date.csv"), 10))
+            .getMessage());
+
+    assertEquals("Invalid file",
+        assertThrows(IllegalArgumentException.class,
+            () -> LedgerFileProcessing.readLedgerFromFile(
+                res("non-int-amount.csv"), 10))
+            .getMessage());
+
+    assertEquals("Invalid file",
+        assertThrows(IllegalArgumentException.class,
+            () -> LedgerFileProcessing.readLedgerFromFile(
+                res("missing-description.csv"), 10))
+            .getMessage());
   }
-
 }

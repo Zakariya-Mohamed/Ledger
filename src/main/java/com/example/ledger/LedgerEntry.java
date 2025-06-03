@@ -5,6 +5,7 @@ package com.example.ledger;
  * 
  * @author Zakariya Mohamed
  */
+
 public class LedgerEntry implements Comparable<LedgerEntry> {
 
   /**

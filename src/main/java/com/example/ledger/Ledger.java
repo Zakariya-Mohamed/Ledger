@@ -1,5 +1,6 @@
 package com.example.ledger;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.Arrays;
 import java.util.Comparator;
 
@@ -224,6 +225,7 @@ public class Ledger {
    *
    * @return ledger with credit entries
    */
+  @JsonIgnore
   public Ledger getCredits() {
     Ledger creditsLedger = new Ledger(getSize());
     for (int i = 0; i < numEntries; i++) {
@@ -239,6 +241,7 @@ public class Ledger {
    *
    * @return ledger with debit entries
    */
+  @JsonIgnore
   public Ledger getDebits() {
     Ledger debitsLedger = new Ledger(getSize());
     for (int i = 0; i < numEntries; i++) {
@@ -257,6 +260,7 @@ public class Ledger {
    * @return ledger with entries in range
    * @throws IllegalArgumentException if dates are null
    */
+  @JsonIgnore
   public Ledger getDateRange(LedgerDate start, LedgerDate end) {
     if (start == null || end == null) {
       throw new IllegalArgumentException("Null date");

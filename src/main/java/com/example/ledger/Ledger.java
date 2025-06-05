@@ -1,8 +1,10 @@
 package com.example.ledger;
 
+import java.util.ArrayList;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 
 /**
  * Represents a ledger that tracks financial entries with dates, descriptions,
@@ -12,33 +14,22 @@ import java.util.Comparator;
  */
 public class Ledger {
 
-  /** Default maximum number of entries in the ledger. */
-  public static final int DEFAULT_MAX_SIZE = 30;
+  /** Array storing the ledger entries. */
+  private final List<LedgerEntry> entries;
 
-  /** Maximum number of entries in the ledger. */
-  private int size;
-
-  /** Number of entries currently in the ledger. */
-  private int numEntries;
-
-  /** Array tracking balance after each entry. */
-  private int[] balances;
+  /** Array storing the balances. */
+  private final List<Integer> balances;
 
   /** Current balance of the ledger. */
   private int balance;
-
-  /** Array storing the ledger entries. */
-  private LedgerEntry[] entries;
 
   /**
    * Creates a ledger with default maximum size.
    */
   public Ledger() {
-    this.size = DEFAULT_MAX_SIZE;
-    this.numEntries = 0;
     this.balance = 0;
-    this.entries = new LedgerEntry[DEFAULT_MAX_SIZE];
-    this.balances = new int[DEFAULT_MAX_SIZE];
+    this.entries = new ArrayList<>();
+    this.balances = new ArrayList<>();
   }
 
   /**
@@ -51,29 +42,9 @@ public class Ledger {
     if (size <= 0) {
       throw new IllegalArgumentException("Invalid size");
     }
-    this.size = size;
-    this.numEntries = 0;
     this.balance = 0;
-    this.entries = new LedgerEntry[size];
-    this.balances = new int[size];
-  }
-
-  /**
-   * Checks if ledger is full.
-   *
-   * @return true if ledger is full, false otherwise
-   */
-  public boolean isFull() {
-    return size == numEntries;
-  }
-
-  /**
-   * Gets the maximum size of the ledger.
-   *
-   * @return the maximum number of entries
-   */
-  public int getSize() {
-    return size;
+    this.entries = new ArrayList<>();
+    this.balances = new ArrayList<>();
   }
 
   /**
@@ -82,7 +53,7 @@ public class Ledger {
    * @return number of entries
    */
   public int getNumEntries() {
-    return numEntries;
+    return entries.size();
   }
 
   /**
@@ -102,10 +73,10 @@ public class Ledger {
    * @throws IllegalArgumentException if index is invalid
    */
   public String getDescriptionAt(int i) {
-    if (i < 0 || i >= numEntries) {
+    if (i < 0 || i >= entries.size()) {
       throw new IllegalArgumentException("Invalid index");
     }
-    return entries[i].getDescription();
+    return entries.get(i).getDescription();
   }
 
   /**
@@ -116,10 +87,10 @@ public class Ledger {
    * @throws IllegalArgumentException if index is invalid
    */
   public LedgerDate getDateAt(int i) {
-    if (i < 0 || i >= numEntries) {
+    if (i < 0 || i >= entries.size()) {
       throw new IllegalArgumentException("Invalid index");
     }
-    return entries[i].getDate();
+    return entries.get(i).getDate();
   }
 
   /**
@@ -130,10 +101,10 @@ public class Ledger {
    * @throws IllegalArgumentException if index is invalid
    */
   public int getAmountAt(int i) {
-    if (i < 0 || i >= numEntries) {
+    if (i < 0 || i >= entries.size()) {
       throw new IllegalArgumentException("Invalid index");
     }
-    return entries[i].getAmount();
+    return entries.get(i).getAmount();
   }
 
   /**
@@ -144,22 +115,23 @@ public class Ledger {
    * @throws IllegalArgumentException if index is invalid
    */
   public int getBalanceAt(int i) {
-    if (i < 0 || i >= numEntries) {
+    if (i < 0 || i >= entries.size()) {
       throw new IllegalArgumentException("Invalid index");
     }
-    return balances[i];
+    return balances.get(i);
   }
 
   /**
    * Sorts entries and updates balances.
    */
   private void sort() {
-    Arrays.sort(entries, entryCompWithNull);
+    entries.sort(entryCompWithNull);
+    balances.clear();
 
     int runningBalance = 0;
-    for (int i = 0; i < numEntries; i++) {
-      runningBalance += entries[i].getAmount();
-      balances[i] = runningBalance;
+    for (int i = 0; i < entries.size(); i++) {
+      runningBalance += entries.get(i).getAmount();
+      balances.add(runningBalance);
     }
   }
 
@@ -167,21 +139,16 @@ public class Ledger {
    * Adds an entry to the ledger.
    *
    * @param entry the entry to add
-   * @throws IllegalArgumentException if entry is null or ledger is full
+   * @throws IllegalArgumentException if entry is null
    */
   public void addEntry(LedgerEntry entry) {
     if (entry == null) {
       throw new IllegalArgumentException("Null entry");
     }
-    if (isFull()) {
-      throw new IllegalArgumentException("Ledger is full");
-    }
 
-    entries[numEntries] = entry;
-    numEntries++;
+    entries.add(entry);
     sort();
     balance += entry.getAmount();
-    balances[numEntries - 1] = balance;
   }
 
   /**
@@ -208,16 +175,11 @@ public class Ledger {
     if (amount == 0) {
       throw new IllegalArgumentException("Amount is zero");
     }
-    if (isFull()) {
-      throw new IllegalArgumentException("Ledger is full");
-    }
 
     LedgerEntry entry = new LedgerEntry(month, day, year, description, amount);
-    entries[numEntries] = entry;
-    numEntries++;
+    entries.add(entry);
     balance += amount;
     sort();
-    balances[numEntries - 1] = balance;
   }
 
   /**
@@ -227,147 +189,90 @@ public class Ledger {
    */
   @JsonIgnore
   public Ledger getCredits() {
-    Ledger creditsLedger = new Ledger(getSize());
-    for (int i = 0; i < numEntries; i++) {
-      if (entries[i].getAmount() > 0) {
-        creditsLedger.addEntry(entries[i]);
+    Ledger creditsLedger = new Ledger();
+    for (int i = 0; i < entries.size(); i++) {
+      if (entries.get(i).getAmount() > 0) {
+        creditsLedger.addEntry(entries.get(i));
       }
     }
     return creditsLedger;
   }
 
-  /**
-   * Gets a ledger containing only debit entries.
-   *
-   * @return ledger with debit entries
-   */
   @JsonIgnore
   public Ledger getDebits() {
-    Ledger debitsLedger = new Ledger(getSize());
-    for (int i = 0; i < numEntries; i++) {
-      if (entries[i].getAmount() < 0) {
-        debitsLedger.addEntry(entries[i]);
+    Ledger debitsLedger = new Ledger();
+    for (LedgerEntry entry : entries) {
+      if (entry.getAmount() < 0) {
+        debitsLedger.addEntry(entry);
       }
     }
     return debitsLedger;
   }
 
-  /**
-   * Gets entries within a date range.
-   *
-   * @param start the start date
-   * @param end   the end date
-   * @return ledger with entries in range
-   * @throws IllegalArgumentException if dates are null
-   */
   @JsonIgnore
   public Ledger getDateRange(LedgerDate start, LedgerDate end) {
     if (start == null || end == null) {
       throw new IllegalArgumentException("Null date");
     }
 
-    Ledger dateRangeLedger = new Ledger(getSize());
-    for (int i = 0; i < numEntries; i++) {
-      LedgerDate entryDate = entries[i].getDate();
+    Ledger dateRangeLedger = new Ledger();
+    for (LedgerEntry entry : entries) {
+      LedgerDate entryDate = entry.getDate();
       if (entryDate.compareTo(start) >= 0 && entryDate.compareTo(end) <= 0) {
-        dateRangeLedger.addEntry(entries[i]);
+        dateRangeLedger.addEntry(entry);
       }
     }
     return dateRangeLedger;
   }
 
-  /**
-   * Gets entry at specified index.
-   *
-   * @param index the index
-   * @return the entry
-   * @throws IllegalArgumentException if index is invalid
-   */
   public LedgerEntry getEntry(int index) {
-    if (index < 0 || index >= numEntries) {
+    if (index < 0 || index >= entries.size()) {
       throw new IllegalArgumentException("Invalid index");
     }
-    return entries[index];
+    return entries.get(index);
   }
 
-  /**
-   * Returns string representation of ledger.
-   *
-   * @return string representation
-   */
+  @Override
   public String toString() {
-    String result = "Date,Description,Amount,Balance\n";
+    StringBuilder result = new StringBuilder("Date,Description,Amount,Balance\n");
+    for (int i = 0; i < entries.size(); i++) {
+      LedgerEntry entry = entries.get(i);
+      LedgerDate date = entry.getDate();
 
-    for (int i = 0; i < numEntries; i++) {
-      LedgerEntry entry = entries[i];
-      int year = entry.getDate().getYear();
-      int month = entry.getDate().getMonth();
-      int day = entry.getDate().getDay();
-
-      String formattedDate = String.format("%04d%02d%02d", year, month, day);
-      result += formattedDate + ","
-          + entry.getDescription() + ","
-          + entry.getAmount() + ","
-          + balances[i] + "\n";
+      String formattedDate = String.format("%04d%02d%02d", date.getYear(), date.getMonth(), date.getDay());
+      result.append(formattedDate).append(",")
+          .append(entry.getDescription()).append(",")
+          .append(entry.getAmount()).append(",")
+          .append(balances.get(i)).append("\n");
     }
-    return result;
+    return result.toString();
   }
 
-  /**
-   * Checks equality with another ledger.
-   *
-   * @param o the object to compare
-   * @return true if equal, false otherwise
-   */
+  @Override
   public boolean equals(Object o) {
-    if (this == o) {
+    if (this == o)
       return true;
-    }
-    if (!(o instanceof Ledger)) {
+    if (!(o instanceof Ledger))
       return false;
-    }
 
     Ledger otherLedger = (Ledger) o;
-    if (this.size != otherLedger.size) {
-      return false;
-    }
-    if (this.entries.length != otherLedger.entries.length) {
-      return false;
-    }
 
-    for (int i = 0; i < this.entries.length; i++) {
-      if ((this.entries[i] == null && otherLedger.entries[i] != null)
-          || (this.entries[i] != null
-              && !this.entries[i].equals(otherLedger.entries[i]))) {
-        return false;
-      }
-    }
-
-    if (this.balances.length != otherLedger.balances.length) {
+    if (this.balance != otherLedger.balance)
       return false;
-    }
-
-    for (int i = 0; i < this.balances.length; i++) {
-      if (this.balances[i] != otherLedger.balances[i]) {
-        return false;
-      }
-    }
-    return true;
+    if (!this.entries.equals(otherLedger.entries))
+      return false;
+    return this.balances.equals(otherLedger.balances);
   }
 
-  /** Comparator for sorting LedgerEntry objects. */
-  private static Comparator<LedgerEntry> entryCompWithNull = new Comparator<LedgerEntry>() {
+  private static final Comparator<LedgerEntry> entryCompWithNull = new Comparator<LedgerEntry>() {
     @Override
     public int compare(LedgerEntry o1, LedgerEntry o2) {
-      if (o1 == null && o2 == null) {
+      if (o1 == null && o2 == null)
         return 0;
-      }
-      if (o1 == null) {
+      if (o1 == null)
         return 1;
-      }
-      if (o2 == null) {
+      if (o2 == null)
         return -1;
-      }
       return o1.compareTo(o2);
     }
   };

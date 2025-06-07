@@ -25,21 +25,12 @@ public class LedgerTest {
   }
 
   /**
-   * Tests the public constant DEFAULT_MAX_SIZE.
-   */
-  @Test
-  public void testPublicConstant() {
-    assertEquals(30, Ledger.DEFAULT_MAX_SIZE);
-  }
-
-  /**
    * Tests the no-parameter constructor.
    */
   @Test
   public void testConstructorNoParameters() {
     // checks that no entries and default values
     assertEquals(0, ledger.getNumEntries());
-    assertEquals(30, ledger.getSize());
     assertEquals(0, ledger.getBalance());
     assertEquals("Date,Description,Amount,Balance\n", ledger.toString());
   }
@@ -53,7 +44,7 @@ public class LedgerTest {
     int customSize = 50;
     Ledger customLedger = new Ledger(customSize);
     assertEquals(0, customLedger.getNumEntries());
-    assertEquals(customSize, customLedger.getSize());
+    assertEquals(customSize, customLedger.getNumEntries());
     assertEquals(0, customLedger.getBalance());
     assertEquals("Date,Description,Amount,Balance\n", customLedger.toString());
   }
@@ -113,22 +104,6 @@ public class LedgerTest {
   }
 
   /**
-   * Tests the isFull method.
-   */
-  @Test
-  public void testIsFull() {
-    ledger = new Ledger(2);
-    assertFalse(ledger.isFull(),
-        "Test empty ledger with size 2 - not full");
-    ledger.addEntry(3, 3, 2033, "Dinner out", -100);
-    assertFalse(ledger.isFull(),
-        "Test ledger with size 2 and one entry - not full");
-    ledger.addEntry(4, 3, 2033, "Dinner out", -100);
-    assertTrue(ledger.isFull(),
-        "Test ledger with size 2 and two entries - full");
-  }
-
-  /**
    * Tests adding two entries to the ledger.
    */
   @Test
@@ -136,7 +111,7 @@ public class LedgerTest {
     // add first entry
     ledger.addEntry(3, 3, 2033, "Dinner out", -100);
     assertEquals(1, ledger.getNumEntries());
-    assertEquals(30, ledger.getSize());
+    assertEquals(30, ledger.getNumEntries());
     assertEquals(-100, ledger.getBalance());
     assertEquals("Date,Description,Amount,Balance\n"
         + "20330303,Dinner out,-100,-100\n", ledger.toString());
@@ -144,7 +119,7 @@ public class LedgerTest {
     // add second entry that would be sorted after first
     ledger.addEntry(3, 3, 2033, "Dinner out - friend's portion", 30);
     assertEquals(2, ledger.getNumEntries());
-    assertEquals(30, ledger.getSize());
+    assertEquals(30, ledger.getNumEntries());
     assertEquals(-70, ledger.getBalance());
     assertEquals(
         "Date,Description,Amount,Balance\n"
@@ -160,14 +135,14 @@ public class LedgerTest {
   public void testAddEntryThreeEntriesStudent() {
     ledger.addEntry(3, 3, 2033, "Dinner out", -100);
     assertEquals(1, ledger.getNumEntries());
-    assertEquals(30, ledger.getSize());
+    assertEquals(30, ledger.getNumEntries());
     assertEquals(-100, ledger.getBalance());
     assertEquals("Date,Description,Amount,Balance\n"
         + "20330303,Dinner out,-100,-100\n", ledger.toString());
 
     ledger.addEntry(3, 3, 2033, "Dinner out - friend's portion", 30);
     assertEquals(2, ledger.getNumEntries());
-    assertEquals(30, ledger.getSize());
+    assertEquals(30, ledger.getNumEntries());
     assertEquals(-70, ledger.getBalance());
     assertEquals(
         "Date,Description,Amount,Balance\n"
@@ -177,7 +152,7 @@ public class LedgerTest {
 
     ledger.addEntry(1, 1, 2023, "Gift", 50);
     assertEquals(3, ledger.getNumEntries());
-    assertEquals(30, ledger.getSize());
+    assertEquals(30, ledger.getNumEntries());
     assertEquals(-20, ledger.getBalance());
     assertEquals(
         "Date,Description,Amount,Balance\n"
@@ -244,7 +219,7 @@ public class LedgerTest {
 
     Ledger credits = ledger.getCredits();
     assertEquals(2, credits.getNumEntries());
-    assertEquals(30, credits.getSize());
+    assertEquals(30, credits.getNumEntries());
     assertEquals(80, credits.getBalance());
     assertEquals(
         "Date,Description,Amount,Balance\n" + "20230101,Gift,50,50\n"
@@ -268,7 +243,7 @@ public class LedgerTest {
 
     Ledger debits = ledger.getDebits();
     assertEquals(1, debits.getNumEntries());
-    assertEquals(30, debits.getSize());
+    assertEquals(30, debits.getNumEntries());
     assertEquals(-100, debits.getBalance());
     assertEquals("Date,Description,Amount,Balance\n"
         + "20330303,Dinner out,-100,-100\n", debits.toString());
@@ -291,7 +266,7 @@ public class LedgerTest {
     Ledger range = ledger.getDateRange(new LedgerDate(12, 10, 2022),
         new LedgerDate(3, 4, 2033));
     assertEquals(3, range.getNumEntries());
-    assertEquals(30, range.getSize());
+    assertEquals(30, range.getNumEntries());
     assertEquals(-20, range.getBalance());
     assertEquals(
         "Date,Description,Amount,Balance\n" + "20230101,Gift,50,50\n"
@@ -302,7 +277,7 @@ public class LedgerTest {
     range = ledger.getDateRange(new LedgerDate(2, 28, 2033),
         new LedgerDate(3, 3, 2033));
     assertEquals(2, range.getNumEntries());
-    assertEquals(30, range.getSize());
+    assertEquals(30, range.getNumEntries());
     assertEquals(-70, range.getBalance());
     assertEquals(
         "Date,Description,Amount,Balance\n"

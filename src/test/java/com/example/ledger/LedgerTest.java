@@ -44,7 +44,7 @@ public class LedgerTest {
     int customSize = 50;
     Ledger customLedger = new Ledger(customSize);
     assertEquals(0, customLedger.getNumEntries());
-    assertEquals(customSize, customLedger.getNumEntries());
+    assertEquals(customSize, customLedger.getCapacity());
     assertEquals(0, customLedger.getBalance());
     assertEquals("Date,Description,Amount,Balance\n", customLedger.toString());
   }

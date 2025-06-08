@@ -22,10 +22,14 @@ public class Ledger {
   /** Current balance of the ledger. */
   private int balance;
 
+  /** int representaion of the capacity of the ledger. */
+  private final int capacity;
+
   /**
    * Creates a ledger with default maximum size.
    */
   public Ledger() {
+    this.capacity = 100;
     this.balance = 0;
     this.entries = new ArrayList<>();
     this.balances = new ArrayList<>();
@@ -41,9 +45,19 @@ public class Ledger {
     if (size <= 0) {
       throw new IllegalArgumentException("Invalid size");
     }
+    this.capacity = size;
     this.balance = 0;
     this.entries = new ArrayList<>();
     this.balances = new ArrayList<>();
+  }
+
+  /**
+   * Gets the capacity of the Ledger
+   * 
+   * @return capacity
+   */
+  public int getCapacity() {
+    return capacity;
   }
 
   /**

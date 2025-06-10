@@ -111,7 +111,6 @@ public class LedgerTest {
     // add first entry
     ledger.addEntry(3, 3, 2033, "Dinner out", -100);
     assertEquals(1, ledger.getNumEntries());
-    assertEquals(30, ledger.getNumEntries());
     assertEquals(-100, ledger.getBalance());
     assertEquals("Date,Description,Amount,Balance\n"
         + "20330303,Dinner out,-100,-100\n", ledger.toString());
@@ -135,7 +134,7 @@ public class LedgerTest {
   public void testAddEntryThreeEntriesStudent() {
     ledger.addEntry(3, 3, 2033, "Dinner out", -100);
     assertEquals(1, ledger.getNumEntries());
-    assertEquals(30, ledger.getNumEntries());
+    assertEquals(2, ledger.getNumEntries());
     assertEquals(-100, ledger.getBalance());
     assertEquals("Date,Description,Amount,Balance\n"
         + "20330303,Dinner out,-100,-100\n", ledger.toString());

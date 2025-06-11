@@ -261,6 +261,7 @@ public class Ledger {
     return result.toString();
   }
 
+  // Method is causing failing tests, due to switching from array to lists
   @Override
   public boolean equals(Object o) {
     if (this == o)

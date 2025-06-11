@@ -271,6 +271,8 @@ public class Ledger {
 
     Ledger otherLedger = (Ledger) o;
 
+    if (this.capacity != otherLedger.capacity)
+      return false;
     if (this.balance != otherLedger.balance)
       return false;
     if (!this.entries.equals(otherLedger.entries))

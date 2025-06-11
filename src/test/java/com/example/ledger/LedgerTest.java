@@ -21,7 +21,7 @@ public class LedgerTest {
    */
   @BeforeEach
   public void setUp() {
-    ledger = new Ledger();
+    ledger = new Ledger(30);
   }
 
   /**
@@ -118,7 +118,7 @@ public class LedgerTest {
     // add second entry that would be sorted after first
     ledger.addEntry(3, 3, 2033, "Dinner out - friend's portion", 30);
     assertEquals(2, ledger.getNumEntries());
-    assertEquals(30, ledger.getNumEntries());
+    assertEquals(30, ledger.getCapacity());
     assertEquals(-70, ledger.getBalance());
     assertEquals(
         "Date,Description,Amount,Balance\n"
@@ -134,14 +134,14 @@ public class LedgerTest {
   public void testAddEntryThreeEntriesStudent() {
     ledger.addEntry(3, 3, 2033, "Dinner out", -100);
     assertEquals(1, ledger.getNumEntries());
-    assertEquals(2, ledger.getNumEntries());
+    assertEquals(30, ledger.getCapacity());
     assertEquals(-100, ledger.getBalance());
     assertEquals("Date,Description,Amount,Balance\n"
         + "20330303,Dinner out,-100,-100\n", ledger.toString());
 
     ledger.addEntry(3, 3, 2033, "Dinner out - friend's portion", 30);
     assertEquals(2, ledger.getNumEntries());
-    assertEquals(30, ledger.getNumEntries());
+    assertEquals(30, ledger.getCapacity());
     assertEquals(-70, ledger.getBalance());
     assertEquals(
         "Date,Description,Amount,Balance\n"
@@ -151,7 +151,7 @@ public class LedgerTest {
 
     ledger.addEntry(1, 1, 2023, "Gift", 50);
     assertEquals(3, ledger.getNumEntries());
-    assertEquals(30, ledger.getNumEntries());
+    assertEquals(30, ledger.getCapacity());
     assertEquals(-20, ledger.getBalance());
     assertEquals(
         "Date,Description,Amount,Balance\n"
@@ -218,7 +218,7 @@ public class LedgerTest {
 
     Ledger credits = ledger.getCredits();
     assertEquals(2, credits.getNumEntries());
-    assertEquals(30, credits.getNumEntries());
+    assertEquals(30, credits.getCapacity());
     assertEquals(80, credits.getBalance());
     assertEquals(
         "Date,Description,Amount,Balance\n" + "20230101,Gift,50,50\n"
@@ -242,7 +242,7 @@ public class LedgerTest {
 
     Ledger debits = ledger.getDebits();
     assertEquals(1, debits.getNumEntries());
-    assertEquals(30, debits.getNumEntries());
+    assertEquals(30, debits.getCapacity());
     assertEquals(-100, debits.getBalance());
     assertEquals("Date,Description,Amount,Balance\n"
         + "20330303,Dinner out,-100,-100\n", debits.toString());

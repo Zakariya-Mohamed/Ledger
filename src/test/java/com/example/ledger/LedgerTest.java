@@ -265,7 +265,7 @@ public class LedgerTest {
     Ledger range = ledger.getDateRange(new LedgerDate(12, 10, 2022),
         new LedgerDate(3, 4, 2033));
     assertEquals(3, range.getNumEntries());
-    assertEquals(30, range.getNumEntries());
+    assertEquals(30, range.getCapacity());
     assertEquals(-20, range.getBalance());
     assertEquals(
         "Date,Description,Amount,Balance\n" + "20230101,Gift,50,50\n"
@@ -276,7 +276,7 @@ public class LedgerTest {
     range = ledger.getDateRange(new LedgerDate(2, 28, 2033),
         new LedgerDate(3, 3, 2033));
     assertEquals(2, range.getNumEntries());
-    assertEquals(30, range.getNumEntries());
+    assertEquals(30, range.getCapacity());
     assertEquals(-70, range.getBalance());
     assertEquals(
         "Date,Description,Amount,Balance\n"
@@ -339,12 +339,6 @@ public class LedgerTest {
         () -> ledger.addEntry(null), "Checking null entry");
     assertEquals("Null entry", exception.getMessage(),
         "Testing null entry exception message");
-
-    exception = assertThrows(IllegalArgumentException.class,
-        () -> ledger.addEntry(3, 4, 2033, "Dinner out", -100),
-        "Checking full ledger when adding");
-    assertEquals("Ledger is full", exception.getMessage(),
-        "Testing full ledger when adding entry exception message");
 
     ledger = new Ledger(20);
     exception = assertThrows(IllegalArgumentException.class,

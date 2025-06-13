@@ -202,7 +202,7 @@ public class Ledger {
    */
   @JsonIgnore
   public Ledger getCredits() {
-    Ledger creditsLedger = new Ledger();
+    Ledger creditsLedger = new Ledger(this.capacity);
     for (int i = 0; i < entries.size(); i++) {
       if (entries.get(i).getAmount() > 0) {
         creditsLedger.addEntry(entries.get(i));
@@ -213,7 +213,7 @@ public class Ledger {
 
   @JsonIgnore
   public Ledger getDebits() {
-    Ledger debitsLedger = new Ledger();
+    Ledger debitsLedger = new Ledger(this.capacity);
     for (LedgerEntry entry : entries) {
       if (entry.getAmount() < 0) {
         debitsLedger.addEntry(entry);
@@ -228,7 +228,7 @@ public class Ledger {
       throw new IllegalArgumentException("Null date");
     }
 
-    Ledger dateRangeLedger = new Ledger();
+    Ledger dateRangeLedger = new Ledger(this.capacity);
     for (LedgerEntry entry : entries) {
       LedgerDate entryDate = entry.getDate();
       if (entryDate.compareTo(start) >= 0 && entryDate.compareTo(end) <= 0) {

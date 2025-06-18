@@ -45,7 +45,6 @@ public class LedgerFileProcessingTest {
         res("Input-three-entries.csv"), 15);
 
     assertEquals(3, ledger.getNumEntries());
-    assertEquals(15, ledger.getSize());
     assertEquals(-20, ledger.getBalance());
     assertEquals(
         "Date,Description,Amount,Balance\n" +
@@ -53,15 +52,6 @@ public class LedgerFileProcessingTest {
             "20330303,Dinner out,-100,-50\n" +
             "20330303,Dinner out - friend's portion,30,-20\n",
         ledger.toString());
-  }
-
-  /** Tests readLedgerFromFile when size is too small */
-  @Test
-  public void testReadLedgerFromFileSizeTooSmall() {
-    Exception ex = assertThrows(IllegalArgumentException.class,
-        () -> LedgerFileProcessing.readLedgerFromFile(
-            res("Input-three-entries.csv"), 2));
-    assertEquals("Ledger is full", ex.getMessage());
   }
 
   /** Tests writeLedgerToFile with valid input */

@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Import Ledger from Server File</title>
+  </head>
+  <body>
+    <h2>Import Ledger from Existing File</h2>
+    <form
+      action="/api/ledger/files/import"
+      method="post"
+      enctype="application/x-www-form-urlencoded"
+    >
+      <label for="filepath">File Path on Server:</label>
+      <input
+        type="text"
+        name="filepath"
+        placeholder="e.g., uploads/sample.csv"
+        required
+      /><br /><br />
+
+      <label for="sizeLedger">Ledger Size (optional):</label>
+      <input type="number" name="sizeLedger" value="1000" /><br /><br />
+
+      <button type="submit">Import</button>
+    </form>
+    <br />
+    <a href="/upload">Back to Upload</a>
+  </body>
+</html>

@@ -8,7 +8,7 @@ public class ViewController {
 
   @GetMapping("/")
   public String home() {
-    return "upload"; // default to upload.html
+    return "upload";
   }
 
   @GetMapping("/upload")
@@ -30,10 +30,4 @@ public class ViewController {
   public String showExportPage() {
     return "export";
   }
-
-  @GetMapping("/")
-  public String showHomePage() {
-    return "index";
-  }
-
 }

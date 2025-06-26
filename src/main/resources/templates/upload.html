@@ -1,22 +1,30 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html>
   <head>
-    <title>Upload Ledger File</title>
+    <title>Ledger App</title>
+    <link rel="stylesheet" href="/css/style.css" />
   </head>
   <body>
-    <h2>Upload CSV Ledger File</h2>
-    <form
-      th:action="@{/api/ledger/files/upload}"
-      method="post"
-      enctype="multipart/form-data"
-    >
-      <label for="file">Choose CSV file:</label>
-      <input type="file" name="file" required /><br /><br />
+    <div class="hero">
+      <h1>Track Your Finances Easily</h1>
+      <p>Upload your CSV ledger and analyze your spending habits in seconds.</p>
+    </div>
 
-      <label for="sizeLedger">Ledger Size (optional):</label>
-      <input type="number" name="sizeLedger" value="1000" /><br /><br />
+    <div class="upload-box">
+      <h2>Upload CSV Ledger File</h2>
+      <form
+        action="/api/ledger/files/upload"
+        method="post"
+        enctype="multipart/form-data"
+      >
+        <label for="file">Choose CSV file:</label>
+        <input type="file" name="file" required /><br /><br />
 
-      <button type="submit">Upload</button>
-    </form>
+        <label for="sizeLedger">Ledger Size (optional):</label>
+        <input type="number" name="sizeLedger" value="1000" /><br /><br />
+
+        <button type="submit">Upload</button>
+      </form>
+    </div>
   </body>
 </html>

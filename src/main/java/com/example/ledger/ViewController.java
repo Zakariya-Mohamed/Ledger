@@ -30,4 +30,9 @@ public class ViewController {
   public String showExportPage() {
     return "export";
   }
+
+  @GetMapping("/login")
+  public String loginPage() {
+    return "login";
+  }
 }

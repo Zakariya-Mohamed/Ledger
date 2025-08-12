@@ -3,26 +3,13 @@ package com.example.ledger;
 import java.io.*;
 import java.util.*;
 
-/**
- * Handles reading and writing ledger data to/from files.
- * 
- * @author Zakariya Mohamed
- */
+import org.springframework.stereotype.Service;
+
+@Service
 public class LedgerFileProcessing {
 
-  /**
-   * integer representing the index the year ends at and the month starts at
-   */
   public static final int YEAR_END_AND_MONTH_START = 4;
-
-  /**
-   * integer representing the index the month ends at and the day starts at
-   */
   public static final int MONTH_END_AND_DAY_START = 6;
-
-  /**
-   * integer representing the index the day ends at
-   */
   public static final int DAY_END = 8;
 
   /**
@@ -33,7 +20,7 @@ public class LedgerFileProcessing {
    * @return the populated Ledger object
    * @throws IllegalArgumentException if any input is invalid
    */
-  public static Ledger readLedgerFromFile(String filepath, int sizeLedger) {
+  public Ledger readLedgerFromFile(String filepath, int sizeLedger) {
     if (filepath == null || filepath.trim().isEmpty()) {
       throw new IllegalArgumentException("Invalid filepath");
     }
@@ -127,7 +114,7 @@ public class LedgerFileProcessing {
         try {
           fileInput.close();
         } catch (IOException e) {
-          /// fix checkstyle error
+          // suppress checkstyle warning
         }
       }
     }
@@ -136,35 +123,22 @@ public class LedgerFileProcessing {
   }
 
   /**
-   * Writes ledger entries to a file.
+   * Writes ledger entries to an output stream in CSV format.
    *
-   * @param filepath the path to the output file
-   * @param ledger   the Ledger object to write
-   * @throws IllegalArgumentException if any input is invalid
+   * @param outputStream the output stream to write to
+   * @param ledger       the Ledger object to write
+   * @throws IllegalArgumentException if any input is invalid or writing fails
    */
-  public static void writeLedgerToFile(String filepath, Ledger ledger) {
-    if (filepath == null || filepath.trim().isEmpty()) {
-      throw new IllegalArgumentException("Invalid filepath");
+  public void writeLedgerToOutputStream(OutputStream outputStream, Ledger ledger) {
+    if (outputStream == null) {
+      throw new IllegalArgumentException("Output stream is null");
     }
     if (ledger == null) {
-      throw new IllegalArgumentException("null ledger");
+      throw new IllegalArgumentException("Ledger is null");
     }
 
-    FileOutputStream fileOutputStream = null;
-    OutputStreamWriter outputStreamWriter = null;
-    try {
-      try {
-        FileInputStream testExists = new FileInputStream(filepath);
-        testExists.close();
-        throw new IllegalArgumentException("Output file already exists.");
-      } catch (FileNotFoundException e) {
-        /// checkstyle
-      }
-
-      fileOutputStream = new FileOutputStream(filepath);
-      outputStreamWriter = new OutputStreamWriter(fileOutputStream);
-
-      outputStreamWriter.write("Date,Description,Amount,Balance\n");
+    try (OutputStreamWriter writer = new OutputStreamWriter(outputStream)) {
+      writer.write("Date,Description,Amount,Balance\n");
 
       int balance = 0;
       for (int i = 0; i < ledger.getNumEntries(); i++) {
@@ -177,30 +151,17 @@ public class LedgerFileProcessing {
 
         String dateStr = String.format("%04d%02d%02d", year, month, day);
 
-        String line = dateStr + ","
-            + entry.getDescription() + ","
-            + entry.getAmount() + ","
-            + balance + "\n";
+        String line = String.format("%s,%s,%d,%d\n",
+            dateStr,
+            entry.getDescription(),
+            entry.getAmount(),
+            balance);
 
-        outputStreamWriter.write(line);
+        writer.write(line);
       }
+      writer.flush();
     } catch (IOException e) {
-      throw new IllegalArgumentException("Error writing to file");
-    } finally {
-      if (outputStreamWriter != null) {
-        try {
-          outputStreamWriter.close();
-        } catch (IOException e) {
-          /// checkstyle
-        }
-      }
-      if (fileOutputStream != null) {
-        try {
-          fileOutputStream.close();
-        } catch (IOException e) {
-          /// checkstyle
-        }
-      }
+      throw new IllegalArgumentException("Error writing to output stream", e);
     }
   }
 }
